@@ -1,26 +1,45 @@
 export class Connection {
-	targets = {};
-
 	/**
 	 * @type {HTMLElement}
 	 */
 	el = undefined;
+	targets = {};
 
-	static connect() {
-		let instance = new this();
-		instance.el = document.querySelector(`[connection-id="${this.name}"]`);
-		instance.onReady?.();
-
-		instance.el.querySelectorAll("[connection-target]").forEach((element) => {
-			instance.targets[element.getAttribute("connection-target")] = element;
+	constructor() {
+		this.el = document.querySelector(
+			`[connection-id="${this.constructor.name}"]`
+		);
+		this.el.querySelectorAll("[connection-target]").forEach((element) => {
+			this.targets[
+				element.getAttribute("connection-target")
+			] = new ConnectionTarget(element);
 		});
-		console.log(instance.targets["Text"]);
-
-		instance.el.querySelectorAll("[connection-action]").forEach((element) => {
+		this.el.querySelectorAll("[connection-action]").forEach((element) => {
 			let action = element.getAttribute("connection-action").split("@");
-			element.addEventListener(action[0], instance[action[1]].bind(instance));
+			element.addEventListener(action[0], this[action[1]].bind(this));
 		});
+
+		this.onReady?.();
 	}
 
-	onReady() {}
+	static connect() {
+		return new this();
+	}
+}
+
+class ConnectionTarget {
+	#el;
+	constructor(el) {
+		this.#el = el;
+	}
+
+	get el() {
+		return this.#el;
+	}
+
+	style(styles) {
+		Object.entries(styles).forEach((style) => {
+			this.#el.style[style[0]] = style[1];
+		});
+	}
 }
